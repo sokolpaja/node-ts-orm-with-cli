@@ -2,51 +2,60 @@ import { Sequelize, DataTypes, Model, Optional, UUIDV4 } from 'sequelize';
 import moment from 'moment';
 
 // Define the User attributes interface
-export interface UserAttributes {
-  id?: string;
+export interface PostAttributes {
+  id: number;
   name: string;
-  userId: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  content: string;
+  profile_id: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Define the User creation attributes interface
-export type UserCreationAttributes = Optional<
-  UserAttributes,
+export type PostCreationAttributes = Optional<
+  PostAttributes,
   'id' | 'createdAt' | 'updatedAt'
 >;
 
 // Extend the Sequelize Model class
-class User
-  extends Model<UserAttributes, UserCreationAttributes>
-  implements UserAttributes
+class Post
+  extends Model<PostAttributes, PostCreationAttributes>
+  implements PostAttributes
 {
-  public id: string;
+  public id!: number;
   public name!: string;
-  public userId!: string;
+  public content!: string;
+  public profile_id!: number;
   public createdAt!: Date;
   public updatedAt!: Date;
 
   static associate(models) {
-    User.hasOne(models.Profile, { foreignKey: 'user_id', as: 'profile' });
+    Post.belongsTo(models.Profile, { foreignKey: 'profile_id', as: 'profile' });
   }
-
   static initModel(sequelize: Sequelize) {
-    User.init(
+    Post.init(
       {
         id: {
           allowNull: false,
           primaryKey: true,
           type: DataTypes.UUID,
-          defaultValue: UUIDV4(),
+          defaultValue: UUIDV4,
         },
         name: {
           type: DataTypes.STRING,
           allowNull: false,
         },
-        userId: {
+        content: {
           type: DataTypes.STRING,
           allowNull: false,
+        },
+        profile_id: {
+          type: DataTypes.UUID,
+          allowNull: false,
+          references: {
+            model: 'profile',
+            key: 'id',
+          },
         },
         createdAt: {
           allowNull: false,
@@ -61,23 +70,23 @@ class User
       },
       {
         sequelize,
-        modelName: 'User',
-        tableName: 'user',
+        modelName: 'Post',
+        tableName: 'post',
         timestamps: true,
       }
     );
 
-    User.beforeCreate(async (user) => {
-      user.createdAt = moment().toDate();
-      user.updatedAt = moment().toDate();
+    Post.beforeCreate(async (post) => {
+      post.createdAt = moment().toDate();
+      post.updatedAt = moment().toDate();
     });
 
-    User.beforeUpdate(async (user) => {
-      user.updatedAt = moment().toDate();
+    Post.beforeUpdate(async (post) => {
+      post.updatedAt = moment().toDate();
     });
 
-    return User;
+    return Post;
   }
 }
 
-export default User;
+export default Post;

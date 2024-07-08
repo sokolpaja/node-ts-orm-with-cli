@@ -2,51 +2,55 @@ import { Sequelize, DataTypes, Model, Optional, UUIDV4 } from 'sequelize';
 import moment from 'moment';
 
 // Define the User attributes interface
-export interface UserAttributes {
+export interface ProfileAttributes {
   id?: string;
   name: string;
-  userId: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  user_id: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Define the User creation attributes interface
-export type UserCreationAttributes = Optional<
-  UserAttributes,
+export type ProfileCreationAttributes = Optional<
+  ProfileAttributes,
   'id' | 'createdAt' | 'updatedAt'
 >;
 
 // Extend the Sequelize Model class
-class User
-  extends Model<UserAttributes, UserCreationAttributes>
-  implements UserAttributes
+class Profile
+  extends Model<ProfileAttributes, ProfileCreationAttributes>
+  implements ProfileAttributes
 {
   public id: string;
   public name!: string;
-  public userId!: string;
+  public user_id!: string;
   public createdAt!: Date;
   public updatedAt!: Date;
 
   static associate(models) {
-    User.hasOne(models.Profile, { foreignKey: 'user_id', as: 'profile' });
+    Profile.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
+    Profile.hasMany(models.Post, { foreignKey: 'profile_id', as: 'posts' });
   }
-
   static initModel(sequelize: Sequelize) {
-    User.init(
+    Profile.init(
       {
         id: {
           allowNull: false,
           primaryKey: true,
           type: DataTypes.UUID,
-          defaultValue: UUIDV4(),
+          defaultValue: UUIDV4,
         },
         name: {
           type: DataTypes.STRING,
           allowNull: false,
         },
-        userId: {
-          type: DataTypes.STRING,
+        user_id: {
+          type: DataTypes.UUID,
           allowNull: false,
+          references: {
+            model: 'user',
+            key: 'id',
+          },
         },
         createdAt: {
           allowNull: false,
@@ -61,23 +65,21 @@ class User
       },
       {
         sequelize,
-        modelName: 'User',
-        tableName: 'user',
+        modelName: 'Profile',
+        tableName: 'profile',
         timestamps: true,
       }
     );
 
-    User.beforeCreate(async (user) => {
-      user.createdAt = moment().toDate();
-      user.updatedAt = moment().toDate();
+    Profile.beforeCreate(async (profile) => {
+      profile.createdAt = moment().toDate();
+      profile.updatedAt = moment().toDate();
     });
 
-    User.beforeUpdate(async (user) => {
-      user.updatedAt = moment().toDate();
+    Profile.beforeUpdate(async (profile) => {
+      profile.updatedAt = moment().toDate();
     });
-
-    return User;
+    return Profile;
   }
 }
-
-export default User;
+export default Profile;

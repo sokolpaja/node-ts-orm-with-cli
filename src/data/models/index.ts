@@ -18,8 +18,8 @@ let sequelize = new Sequelize(
   dbConfig.username,
   dbConfig.password,
   {
-    host: dbConfig.host,
-    dialect: dbConfig.dialect || 'postgres',
+    host: dbConfig.host || 'localhost',
+    dialect: 'postgres',
   }
 );
 
@@ -33,7 +33,9 @@ fs.readdirSync(__dirname)
     );
   })
   .forEach((file) => {
-    const model = require(path.join(__dirname, file)).initModel(sequelize);
+    const modelImported = require(path.join(__dirname, file));
+
+    const model = modelImported.default.initModel(sequelize);
     db[model.name] = model;
   });
 
